@@ -52,6 +52,13 @@ async fn main() -> Result<()> {
     discovery.announce(&cli.node_id).await?;
     broker.connect().await?;
 
+    let port = config.service.port;
+    tokio::spawn(async move {
+        if let Err(e) = tent_backend::api::start_server(port).await {
+            tracing::error!("HTTP server error: {}", e);
+        }
+    });
+
     tracing::info!("all subsystems initialized successfully, entering main loop");
 
     let mut signal = tokio::signal::unix::signal(
